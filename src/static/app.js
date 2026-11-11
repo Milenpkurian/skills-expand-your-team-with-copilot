@@ -472,6 +472,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function getActivityShareUrl(activityName) {
+    const pageUrl = window.location.href.split("#")[0];
+    return `${pageUrl}#activity=${encodeURIComponent(activityName)}`;
+  }
+
+  function getActivityShareText(activityName, details) {
+    return `Check out ${activityName} at Mergington High School! ${details.description}`;
+  }
+
+  async function copyShareLink(url) {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = url;
+        textArea.setAttribute("readonly", "");
+        textArea.style.position = "fixed";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        textArea.remove();
+      }
+      showMessage("Activity link copied to your clipboard.", "success");
+    } catch (error) {
+      console.error("Error copying activity link:", error);
+      showMessage("Could not copy the activity link. Please try again.", "error");
+    }
+  }
+
+  async function shareActivity(activityName, details) {
+    const shareUrl = getActivityShareUrl(activityName);
+    const shareText = getActivityShareText(activityName, details);
+
+    if (!navigator.share) {
+      showMessage("Native sharing is not available on this device.", "info");
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: activityName,
+        text: shareText,
+        url: shareUrl,
+      });
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Error sharing activity:", error);
+        showMessage("Could not share this activity. Please try again.", "error");
+      }
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -498,6 +552,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareUrl = getActivityShareUrl(name);
+    const shareText = getActivityShareText(name, details);
 
     // Create activity tag
     const tagHtml = `
@@ -527,6 +583,26 @@ document.addEventListener("DOMContentLoaded", () => {
         <strong>Schedule:</strong> ${formattedSchedule}
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
       </p>
+      <div class="share-container">
+        <button class="share-button" type="button" aria-expanded="false">
+          <span aria-hidden="true">↗</span> Share activity
+        </button>
+        <div class="share-options hidden">
+          <button class="native-share-button" type="button">Share...</button>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            shareUrl
+          )}" target="_blank" rel="noopener noreferrer">Facebook</a>
+          <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(
+            shareText
+          )}&url=${encodeURIComponent(
+            shareUrl
+          )}" target="_blank" rel="noopener noreferrer">X</a>
+          <a href="https://wa.me/?text=${encodeURIComponent(
+            `${shareText} ${shareUrl}`
+          )}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <button class="copy-share-button" type="button">Copy link</button>
+        </div>
+      </div>
       ${capacityIndicator}
       <div class="participants-list">
         <h5>Current Participants:</h5>
@@ -576,6 +652,21 @@ document.addEventListener("DOMContentLoaded", () => {
     deleteButtons.forEach((button) => {
       button.addEventListener("click", handleUnregister);
     });
+
+    const shareButton = activityCard.querySelector(".share-button");
+    const shareOptions = activityCard.querySelector(".share-options");
+    shareButton.addEventListener("click", () => {
+      const isExpanded = shareButton.getAttribute("aria-expanded") === "true";
+      shareButton.setAttribute("aria-expanded", String(!isExpanded));
+      shareOptions.classList.toggle("hidden", isExpanded);
+    });
+
+    activityCard
+      .querySelector(".native-share-button")
+      .addEventListener("click", () => shareActivity(name, details));
+    activityCard
+      .querySelector(".copy-share-button")
+      .addEventListener("click", () => copyShareLink(shareUrl));
 
     // Add click handler for register button (only when authenticated)
     if (currentUser) {

@@ -190,6 +190,54 @@ section h3 {
   justify-content: center;
 }
 
+/* Activity sharing */
+.share-container {
+  position: relative;
+  margin: 2px 0 8px;
+}
+
+.share-button {
+  background-color: var(--background);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.share-button:hover,
+.share-button:focus-visible {
+  background-color: var(--primary);
+  color: var(--primary-text);
+}
+
+.share-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.share-options button,
+.share-options a {
+  background-color: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  padding: 4px 7px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.share-options button:hover,
+.share-options button:focus-visible,
+.share-options a:hover,
+.share-options a:focus-visible {
+  background-color: var(--primary-light);
+  color: var(--primary-text);
+}
+
 /* Activity Tag */
 .activity-tag {
   position: absolute;
